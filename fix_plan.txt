@@ -1,0 +1,15 @@
+// Fix all withOpacity to withValues in working_main_screen.dart
+// Line 99: Colors.purple.withOpacity(0.7) -> Colors.purple.withValues(alpha: 0.7)
+// Line 102: Colors.pink.withOpacity(0.7) -> Colors.pink.withValues(alpha: 0.7)
+// Line 108: Colors.white.withOpacity(0.9) -> Colors.white.withValues(alpha: 0.9)
+// Line 156: Colors.white.withOpacity(0.2) -> Colors.white.withValues(alpha: 0.2)
+// Line 157: Colors.black.withOpacity(0.3) -> Colors.black.withValues(alpha: 0.3)
+// Line 165: Colors.white.withOpacity(0.8) -> Colors.white.withValues(alpha: 0.8)
+// Line 166: Colors.white.withOpacity(0.2) -> Colors.white.withValues(alpha: 0.2)
+// Line 228: Colors.white.withOpacity(0.1) -> Colors.white.withValues(alpha: 0.1)
+// Line 229: Colors.white.withOpacity(0.2) -> Colors.white.withValues(alpha: 0.2)
+// Line 235: Colors.white.withOpacity(0.2) -> Colors.white.withValues(alpha: 0.2)
+// Line 236: Colors.white.withOpacity(0.3) -> Colors.white.withValues(alpha: 0.3)
+// Line 241: Colors.white.withOpacity(0.1) -> Colors.white.withValues(alpha: 0.1)
+
+// Apply these changes by finding and replacing each withOpacity call
