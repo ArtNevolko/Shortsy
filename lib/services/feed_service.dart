@@ -8,13 +8,15 @@ class Post {
   final String caption;
   int likes;
   bool liked;
+  String? poster;
   Post(
       {required this.id,
       required this.url,
       required this.author,
       required this.caption,
       required this.likes,
-      required this.liked});
+      required this.liked,
+      this.poster});
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -23,6 +25,7 @@ class Post {
         'caption': caption,
         'likes': likes,
         'liked': liked,
+        'poster': poster,
       };
   static Post fromJson(Map<String, dynamic> m) => Post(
         id: m['id'],
@@ -31,6 +34,7 @@ class Post {
         caption: m['caption'],
         likes: m['likes'] ?? 0,
         liked: m['liked'] ?? false,
+        poster: m['poster'],
       );
 }
 
@@ -40,8 +44,10 @@ class FeedService {
   factory FeedService() => _i;
 
   static const _kFeed = 'feed_posts_v1';
+  List<Post>? _cache;
 
-  Future<List<Post>> getPosts() async {
+  Future<List<Post>> getPosts({bool force = false}) async {
+    if (!force && _cache != null) return _cache!;
     final p = await SharedPreferences.getInstance();
     final raw = p.getString(_kFeed);
     if (raw != null) {
@@ -50,7 +56,8 @@ class FeedService {
     }
     final seeded = _seed();
     await _save(seeded);
-    return seeded;
+    final posts = _cache;
+    return posts!;
   }
 
   Future<void> toggleLike(String id) async {
@@ -96,6 +103,7 @@ class FeedService {
           caption: 'BipBop sample',
           likes: 12300,
           liked: false,
+          poster: 'https://i.imgur.com/8Km9tLL.jpg',
         ),
         Post(
           id: 'p2',
@@ -104,6 +112,8 @@ class FeedService {
           caption: 'Mux test stream',
           likes: 420,
           liked: false,
+          poster:
+              'https://image.mux.com/7xKSBsQJu01yR7Jv013D5yZ3w3r01nHy/thumbnail.jpg',
         ),
         Post(
           id: 'p3',
@@ -113,6 +123,7 @@ class FeedService {
           caption: 'Sintel HLS',
           likes: 940,
           liked: false,
+          poster: 'https://bitdash-a.akamaihd.net/content/sintel/poster.png',
         ),
       ];
 

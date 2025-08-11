@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/feed_service.dart';
 import '../services/follow_service.dart';
 import '../services/saved_service.dart';
+import '../shared/services/ui_prefs.dart';
 import 'edit_profile_screen.dart';
 import 'privacy_screen.dart';
 import '../shared/widgets/index.dart';
@@ -151,6 +152,11 @@ class SettingsScreen extends StatelessWidget {
               await AuthService().signOut();
               if (context.mounted) Navigator.of(context).pop();
             },
+          ),
+          SwitchListTile(
+            title: const Text('Анимированный фон'),
+            value: UiPrefs().animatedBackdrop.value,
+            onChanged: (v) => UiPrefs().setAnimatedBackdrop(v),
           ),
         ],
       ),

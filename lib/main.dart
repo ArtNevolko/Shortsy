@@ -12,10 +12,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app/routes.dart';
 import 'shared/services/theme_service.dart';
 import 'shared/widgets/theme_switcher.dart';
+import 'shared/services/ui_prefs.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ThemeService().init();
+  await UiPrefs().init();
   runApp(const ThemeSwitcher(child: ShortsyApp()));
 }
 
@@ -103,30 +105,28 @@ class _MainShellState extends State<_MainShell> {
     final b = Theme.of(context).brightness;
     final bg = AppDesign.backgroundGradientFor(b);
     final vig = AppDesign.subtleVignetteFor(b);
-    return Scaffold(
-      extendBody: true,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(gradient: bg),
-            ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: UiPrefs().animatedBackdrop,
+      builder: (_, anim, __) {
+        return Scaffold(
+          extendBody: true,
+          body: Stack(
+            children: [
+              Positioned.fill(
+                  child: DecoratedBox(decoration: BoxDecoration(gradient: bg))),
+              if (anim)
+                const Positioned.fill(child: AnimatedBackdrop(speed: 28)),
+              Positioned.fill(child: _buildPage(_index)),
+              Positioned.fill(
+                  child: IgnorePointer(
+                      child: DecoratedBox(
+                          decoration: BoxDecoration(gradient: vig)))),
+            ],
           ),
-          Positioned.fill(child: AnimatedBackdrop(speed: 28)),
-          Positioned.fill(child: _buildPage(_index)),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(gradient: vig),
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: GlassNavBar(
-        currentIndex: _index,
-        onTap: (i) => setState(() => _index = i),
-      ),
+          bottomNavigationBar: GlassNavBar(
+              currentIndex: _index, onTap: (i) => setState(() => _index = i)),
+        );
+      },
     );
   }
 

@@ -3,26 +3,33 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'shimmer_tile.dart';
 
 class VideoFeedPager extends StatefulWidget {
   final List<String> urls;
+  final List<String>? posters;
   final ValueChanged<int>? onIndexChanged;
-  const VideoFeedPager({super.key, required this.urls, this.onIndexChanged});
+  const VideoFeedPager(
+      {super.key, required this.urls, this.posters, this.onIndexChanged});
 
   @override
   State<VideoFeedPager> createState() => _VideoFeedPagerState();
 }
 
-class _VideoFeedPagerState extends State<VideoFeedPager> {
+class _VideoFeedPagerState extends State<VideoFeedPager>
+    with WidgetsBindingObserver {
   final _page = PageController();
   final _cache = DefaultCacheManager();
   final Map<int, VideoPlayerController> _controllers = {};
+  final Map<int, String> _errors = {};
   int _index = 0;
   bool _disposed = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initIndex(0);
     _page.addListener(() {
       final i = _page.page?.round() ?? 0;
@@ -34,17 +41,31 @@ class _VideoFeedPagerState extends State<VideoFeedPager> {
     });
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _play(_index);
+    } else {
+      for (final c in _controllers.values) {
+        try {
+          c.pause();
+        } catch (_) {}
+      }
+    }
+  }
+
   Future<void> _initIndex(int i) async {
     await _ensureController(i);
     _ensureWindow(i);
     _play(i);
   }
 
-  Future<void> _ensureController(int i) async {
+  Future<void> _ensureController(int i, {int attempt = 0}) async {
     if (_controllers.containsKey(i)) return;
     if (i < 0 || i >= widget.urls.length) return;
     final src = widget.urls[i];
     try {
+      _errors.remove(i);
       final ctrl =
           await _createController(src).timeout(const Duration(seconds: 8));
       if (_disposed) {
@@ -54,9 +75,16 @@ class _VideoFeedPagerState extends State<VideoFeedPager> {
       await ctrl.initialize().timeout(const Duration(seconds: 8));
       ctrl.setLooping(true);
       _controllers[i] = ctrl;
-      setState(() {});
-    } catch (_) {
-      // оставим без контроллера — покажем Retry
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (attempt < 2) {
+        final delay = Duration(milliseconds: 400 * (1 << attempt));
+        await Future.delayed(delay);
+        await _ensureController(i, attempt: attempt + 1);
+      } else {
+        _errors[i] = e.toString();
+        if (mounted) setState(() {});
+      }
     }
   }
 
@@ -83,19 +111,17 @@ class _VideoFeedPagerState extends State<VideoFeedPager> {
   }
 
   void _ensureWindow(int center) {
-    final keep = {center, center - 1, center + 1}
-        .where((i) => i >= 0 && i < widget.urls.length)
-        .toSet();
-    // create neighbors
+    final keep = {center};
     for (final i in keep) {
       _ensureController(i);
     }
-    // dispose far controllers
     final toDrop = _controllers.keys.where((k) => !keep.contains(k)).toList();
     for (final k in toDrop) {
-      _controllers.remove(k)?.dispose();
+      final c = _controllers.remove(k);
+      _errors.remove(k);
+      c?.pause();
+      c?.dispose();
     }
-    // play current, pause others
     for (final entry in _controllers.entries) {
       if (entry.key == center) {
         _play(entry.key);
@@ -114,10 +140,15 @@ class _VideoFeedPagerState extends State<VideoFeedPager> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _disposed = true;
     for (final c in _controllers.values) {
+      try {
+        c.pause();
+      } catch (_) {}
       c.dispose();
     }
+    _controllers.clear();
     _page.dispose();
     super.dispose();
   }
@@ -129,14 +160,32 @@ class _VideoFeedPagerState extends State<VideoFeedPager> {
       scrollDirection: Axis.vertical,
       itemCount: widget.urls.length,
       itemBuilder: (context, i) {
-        final c = _controllers[i];
-        if (c == null || !c.value.isInitialized) {
-          return _LoadingTile(
+        if (_errors.containsKey(i)) {
+          return _ErrorTile(
+            message: _errors[i]!,
             onRetry: () async {
+              _controllers.remove(i)?.dispose();
+              _errors.remove(i);
               await _ensureController(i);
-              setState(() {});
+              if (mounted) setState(() {});
             },
           );
+        }
+        final c = _controllers[i];
+        if (c == null || !c.value.isInitialized) {
+          final poster =
+              (widget.posters != null && i < (widget.posters!.length))
+                  ? widget.posters![i]
+                  : '';
+          if (poster.isNotEmpty) {
+            return CachedNetworkImage(
+              imageUrl: poster,
+              fit: BoxFit.cover,
+              placeholder: (_, __) => const ShimmerTile(),
+              errorWidget: (_, __, ___) => const ShimmerTile(),
+            );
+          }
+          return const ShimmerTile();
         }
         return FittedBox(
           fit: BoxFit.cover,
@@ -151,23 +200,36 @@ class _VideoFeedPagerState extends State<VideoFeedPager> {
   }
 }
 
-class _LoadingTile extends StatelessWidget {
+class _ErrorTile extends StatelessWidget {
+  final String message;
   final VoidCallback onRetry;
-  const _LoadingTile({required this.onRetry});
+  const _ErrorTile({required this.message, required this.onRetry});
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        const Positioned.fill(
-          child: Center(child: CircularProgressIndicator()),
-        ),
-        Positioned(
-          right: 12,
-          bottom: 24,
-          child: ElevatedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Повторить'),
+        const Positioned.fill(child: ColoredBox(color: Colors.black)),
+        Positioned.fill(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.report_gmailerrorred,
+                    color: Colors.white70, size: 36),
+                const SizedBox(height: 8),
+                Text('Видео недоступно',
+                    style: const TextStyle(color: Colors.white)),
+                const SizedBox(height: 6),
+                Text(message,
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Повторить')),
+              ],
+            ),
           ),
         ),
       ],

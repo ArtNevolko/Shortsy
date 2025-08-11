@@ -3,6 +3,7 @@ import 'package:share_plus/share_plus.dart';
 import '../shared/services/index.dart';
 import '../shared/widgets/video_feed_pager.dart';
 import '../widgets/comments_sheet.dart';
+import '../app/routes.dart';
 
 class HomeFeedScreen extends StatefulWidget {
   const HomeFeedScreen({super.key});
@@ -78,6 +79,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                 child: VideoFeedPager(
                   key: ValueKey(_current),
                   urls: posts.map((e) => e.url).toList(),
+                  posters: posts.map((e) => e.poster ?? '').toList(),
                   onIndexChanged: (i) => setState(() => _current = i),
                 ),
               ),
@@ -92,8 +94,8 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                   child: Row(
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         'Shortsy',
                         style: TextStyle(
                           fontSize: 18,
@@ -101,6 +103,24 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                           color: Colors.white,
                           letterSpacing: 0.2,
                         ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.wifi_tethering,
+                            color: Colors.white),
+                        onPressed: () =>
+                            Navigator.of(context).pushNamed(RouteNames.live),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded,
+                            color: Colors.white),
+                        onPressed: () {
+                          setState(() {
+                            _future = FeedService().getPosts(force: true);
+                            _postsCache = [];
+                            _current = 0;
+                          });
+                        },
                       ),
                     ],
                   ),
