@@ -59,7 +59,7 @@ class _VerticalVideoPagerState extends State<VerticalVideoPager> {
     if (index < 0 || index >= widget.urls.length) return;
     if (_controllers.containsKey(index)) return;
     final url = widget.urls[index];
-    VideoPlayerController controller = await _createController(url);
+    final VideoPlayerController controller = await _createController(url);
     await controller.initialize();
     controller.setLooping(true);
     _controllers[index] = controller;

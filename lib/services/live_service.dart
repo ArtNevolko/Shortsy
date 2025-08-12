@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:livekit_client/livekit_client.dart';
+import 'package:flutter/foundation.dart';
 import '../config.dart';
 
 class LiveService {
@@ -34,43 +35,45 @@ class LiveService {
   }
 
   Future<Room> hostStart({required String identity}) async {
-    final t = await _fetchToken(
-        identity: identity, room: AppConfig.liveRoom, publish: true);
-    final room =
-        Room(connectOptions: const ConnectOptions(autoSubscribe: true));
-    await room.connect(t.url, t.token);
-    final cam = await LocalVideoTrack.createCameraTrack(
-      const CameraCaptureOptions(params: VideoParametersPresets.h540_169),
-    );
-    final mic = await LocalAudioTrack.create(AudioCaptureOptions());
-    await room.localParticipant?.publishVideoTrack(cam);
-    await room.localParticipant?.publishAudioTrack(mic);
+    final room = Room(roomOptions: const RoomOptions());
+    final resp =
+        await _fetchToken(identity: identity, room: 'shortsy', publish: true);
+    await room.connect(resp.url, resp.token);
     return room;
   }
 
   Future<Room> viewerJoin({required String identity}) async {
-    final t = await _fetchToken(
-        identity: identity, room: AppConfig.liveRoom, publish: false);
-    final room =
-        Room(connectOptions: const ConnectOptions(autoSubscribe: true));
-    await room.connect(t.url, t.token);
+    final room = Room(roomOptions: const RoomOptions());
+    final resp =
+        await _fetchToken(identity: identity, room: 'shortsy', publish: false);
+    await room.connect(resp.url, resp.token);
     return room;
   }
 
   Future<void> startWebRTC({required String url, required String token}) async {
     await stopWebRTC();
-    final room =
-        Room(connectOptions: const ConnectOptions(autoSubscribe: true));
+    debugPrint('LiveKit: Connecting as host to $url');
+    final room = Room(roomOptions: const RoomOptions());
     await room.connect(url, token);
-    final cam = await LocalVideoTrack.createCameraTrack(
-      const CameraCaptureOptions(params: VideoParametersPresets.h540_169),
-    );
-    final mic = await LocalAudioTrack.create(AudioCaptureOptions());
-    await room.localParticipant?.publishVideoTrack(cam);
-    await room.localParticipant?.publishAudioTrack(mic);
-    _activeRoom = room;
-    _activeCam = cam;
-    _activeMic = mic;
+    debugPrint('LiveKit: Connected, creating camera track...');
+    try {
+      final cam = await LocalVideoTrack.createCameraTrack(
+        const CameraCaptureOptions(params: VideoParametersPresets.h360_169),
+      );
+      debugPrint('LiveKit: Camera track created');
+      final mic = await LocalAudioTrack.create(const AudioCaptureOptions());
+      debugPrint('LiveKit: Mic track created');
+      await room.localParticipant?.publishVideoTrack(cam);
+      debugPrint('LiveKit: Camera published');
+      await room.localParticipant?.publishAudioTrack(mic);
+      debugPrint('LiveKit: Mic published');
+      _activeRoom = room;
+      _activeCam = cam;
+      _activeMic = mic;
+    } catch (e) {
+      debugPrint('LiveKit: Camera/mic error: $e');
+      rethrow;
+    }
   }
 
   Future<void> stopWebRTC() async {

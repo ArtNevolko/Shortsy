@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- ic_launcher_background определён в values/ic_launcher_background.xml -->
-	<color name="ic_launcher_background">#2B2F36</color>
+	<color name="ic_launcher_background">#000000</color>
 </resources>

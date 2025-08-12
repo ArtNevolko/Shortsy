@@ -27,7 +27,7 @@ dependencies:
   permission_handler: ^11.0.0
   camera: ^0.10.5+9
   video_player: ^2.8.6
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.2.3
   image_picker: ^1.0.7
   url_launcher: ^6.3.0
   package_info_plus: ^8.0.0
@@ -35,18 +35,20 @@ dependencies:
   connectivity_plus: ^6.0.3
   flutter_cache_manager: ^3.3.1
   wakelock_plus: ^1.2.5
-  livekit_client: ^2.5.0
+  livekit_client: ^2.5.0+hotfix.1
   shimmer: ^3.0.0
   cached_network_image: ^3.3.1
   flutter_webrtc: ^1.0.0
-  http: ^1.2.2
+  http: ^1.2.0
+  path_provider: ^2.1.3
+  crypto: ^3.0.3
+  video_thumbnail: ^0.5.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_native_splash: ^2.4.1
   flutter_launcher_icons: ^0.13.1
-  image: ^4.1.7
 
 flutter:
   uses-material-design: true
@@ -76,7 +78,7 @@ flutter_native_splash:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/branding/logo.png
-  adaptive_icon_foreground: assets/branding/icon_foreground_padded.png
-  adaptive_icon_background: "#2B2F36"
-  remove_alpha_ios: true
+  image_path: assets/branding/icon.png
+  adaptive_icon_foreground: assets/branding/icon.png
+  adaptive_icon_background: "#000000"
+  min_sdk_android: 21

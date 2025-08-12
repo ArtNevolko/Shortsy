@@ -5,35 +5,6 @@
 		}
 	],
 	"settings": {
-		"java.import.gradle.enabled": false,
-		"java.autobuild.enabled": false,
-		"java.configuration.updateBuildConfiguration": "disabled",
-		"java.import.maven.enabled": false,
-		"java.import.exclusions": [
-			"**/.git/**",
-			"**/.svn/**",
-			"**/.hg/**",
-			"**/CVS/**",
-			"**/.DS_Store/**",
-			"**/node_modules/**",
-			"**/bower_components/**",
-			"**/.metadata/**",
-			"**/.settings/**",
-			"**/workspaceStorage/**"
-		],
-		"gradle.autoDetect": "off",
-		"java.errors.incompleteClasspath.severity": "ignore",
-		"files.exclude": {
-			"**/.metadata/**": true,
-			"**/.settings/**": true
-		},
-		"search.exclude": {
-			"**/.metadata/**": true,
-			"**/.settings/**": true
-		},
-		"files.watcherExclude": {
-			"**/.metadata/**": true,
-			"**/.settings/**": true
-		}
+		"extensions.ignoreRecommendations": true
 	}
 }

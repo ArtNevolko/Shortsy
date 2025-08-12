@@ -46,9 +46,9 @@
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>NSCameraUsageDescription</key>
-		<string>Доступ к камере нужен для записи и трансляции видео.</string>
+		<string>Нужен доступ к камере для записи видео и стримов</string>
 		<key>NSMicrophoneUsageDescription</key>
-		<string>Доступ к микрофону нужен для записи и трансляции звука.</string>
+		<string>Нужен доступ к микрофону для записи звука и стримов</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Нужен доступ к фотобиблиотеке для выбора аватара и видео.</string>
 		<key>UIStatusBarHidden</key>

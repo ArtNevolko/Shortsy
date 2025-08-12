@@ -1,2 +1,2 @@
-export '../../screens/create_screen.dart';
-export '../../screens/upload_clip_screen.dart';
+export 'create_screen.dart';
+export 'upload_clip_screen.dart';
